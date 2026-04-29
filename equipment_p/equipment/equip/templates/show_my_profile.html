@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <!--Отображение логотипа на странице-->
+    <link rel="icon" href="{% static 'icon.png' %}" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мой профиль - ГБУЗ РХ АМКБ</title>
+    <style>
+        body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#e8f5e9 0%,#b2dfdb 100%);color:#263238;padding:20px;margin:0;}
+        .container{max-width:900px;margin:0 auto;background:white;padding:30px;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,0.1);}
+        .header{background:white;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+        h1{color:#00695c;margin-top:0;}
+        .nav-bar{margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap;}
+        .nav-link{text-decoration:none;color:white;background:#26a69a;padding:8px 15px;border-radius:5px;font-weight:600;}
+        .nav-link:hover{background:#00897b;}
+        .nav-link.danger{background:#ef5350;}
+        .form-group{margin-bottom:20px;}
+        label{display:block;font-weight:bold;margin-bottom:5px;color:#004d40;}
+        input,select{width:100%;padding:12px;border:1px solid #ccc;border-radius:5px;box-sizing:border-box;font-size:14px;}
+        input:focus,select:focus{outline:none;border-color:#26a69a;box-shadow:0 0 5px rgba(38,166,154,0.3);}
+        input[readonly]{background:#e0e0e0;cursor:not-allowed;}
+        .readonly-hint{font-size:12px;color:#546e7a;margin-top:5px;}
+        .messages{color:#c62828;background:#ffebee;padding:15px;margin-bottom:20px;border-radius:5px;border-left:4px solid #e53935;}
+        .messages.success{color:#2e7d32;background:#e8f5e9;border-left-color:#4caf50;}
+        .row{display:flex;gap:15px;}
+        .row .form-group{flex:1;}
+        .section-title{color:#00695c;border-bottom:2px solid #80cbc4;padding-bottom:10px;margin:30px 0 20px 0;}
+        .role-badge{padding:5px 15px;border-radius:15px;font-size:14px;font-weight:bold;display:inline-block;}
+        .role-admin{background:#F5C2C2;color:#c62828;}
+        .role-manager{background:#f3e5f5;color:#6a1b9a;}
+        .role-technician{background:#fff3e0;color:#e65100;}
+        .role-employee{background:#e8f5e9;color:#2e7d32;}
+        button[type="submit"]{background:#26a69a;color:white;border:none;padding:14px 30px;border-radius:5px;cursor:pointer;font-size:16px;font-weight:bold;width:100%;}
+        button[type="submit"]:hover{background:#00897b;}
+    </style>
+</head>
+<body>
+<!--Хеддер с информацией о заведении и иконкой-->
+<div style="background: linear-gradient(135deg, #00695c 0%, #00897b 100%); padding: 15px 20px; margin-bottom: 20px; border-bottom: 3px solid #4db6ac; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+    <div style="display: flex; align-items: center; gap: 15px; max-width: 1400px; margin: 0 auto;">
+        <img src="{% static 'logo.png' %}" alt="ГБУЗ РХ АМКБ" style="width: 50px; height: 50px; object-fit: contain; border-radius: 8px; background: white; padding: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div style="color: white;">
+            <h1 style="margin: 0; font-size: 24px; font-weight: bold; letter-spacing: 1px; font-family: 'Segoe UI', sans-serif; color: white;">ГБУЗ РХ АМКБ</h1>
+            <p style="margin: 0; font-size: 12px; color: white; font-weight: normal;">Система учёта заявок</p>
+        </div>
+    </div>
+</div>
+<div class="container">
+    <div class="header">
+        <h1>Мой профиль</h1>
+        <p>Добро пожаловать, <strong>{{ user_name }}</strong></p>
+        <span class="role-badge {% if user_role == 'Администратор' %}role-admin{% elif user_role == 'Руководитель' %}role-manager{% elif user_role == 'Техник' %}role-technician{% else %}role-employee{% endif %}">
+            {{ user_role }}
+        </span>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="messages {% if message.tags %}{{ message.tags }}{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <nav class="nav-bar">
+        {% if user_role == 'Администратор' %}
+            <a href="{% url 'show_admin' %}" class="nav-link">Администрирование</a>
+        {% elif user_role == 'Руководитель' %}
+            <a href="{% url 'manager_dashboard' %}" class="nav-link">Панель руководителя</a>
+        {% elif user_role == 'Техник' %}
+            <a href="{% url 'show_technician' %}" class="nav-link">Заявки</a>
+        {% else %}
+            <a href="{% url 'show_customer' %}" class="nav-link">Мои заявки</a>
+        {% endif %}
+        <a href="{% url 'show_my_profile' %}" class="nav-link" style="background:#00695c;">Профиль</a>
+        <a href="{% url 'logout_view' %}" class="nav-link danger">Выйти</a>
+    </nav>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <h2 class="section-title">Основная информация</h2>
+
+        <div class="row">
+            <div class="form-group">
+                <label>Фамилия *</label>
+                <input type="text" name="last_name" value="{{ employee.last_name }}" required>
+            </div>
+            <div class="form-group">
+                <label>Имя *</label>
+                <input type="text" name="first_name" value="{{ employee.first_name }}" required>
+            </div>
+            <div class="form-group">
+                <label>Отчество</label>
+                <input type="text" name="middle_name" value="{{ employee.middle_name }}">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label>Логин (email) *</label>
+                <input type="email" name="login" value="{{ employee.login }}" required>
+            </div>
+            <div class="form-group">
+                <label>Номер телефона</label>
+                <input type="tel" name="phone_number" value="{{ employee.get_formatted_phone|default:employee.phone_number }}">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Новый пароль</label>
+            <input type="password" name="password" placeholder="Оставьте пустым, чтобы не менять">
+        </div>
+
+        <h2 class="section-title">Служебная информация</h2>
+
+        {% if user_role == 'Администратор' %}
+            <div class="row">
+                <div class="form-group">
+                    <label>Должность</label>
+                    <select name="position">
+                        <option value="">-- Не указана --</option>
+                        {% for pos in positions %}
+                            <option value="{{ pos.id }}" {% if employee.position.id == pos.id %}selected{% endif %}>
+                                {{ pos.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Отдел</label>
+                    <select name="department">
+                        <option value="">-- Не указан --</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept.id }}" {% if employee.department.id == dept.id %}selected{% endif %}>
+                                {{ dept.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Кабинет</label>
+                <select name="office">
+                    <option value="">-- Не указан --</option>
+                    {% for office in offices %}
+                        <option value="{{ office.id }}" {% if employee.office.id == office.id %}selected{% endif %}>
+                            {{ office.number|default:"Не распределён" }} ({{ office.building.name|default:"-" }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Роль</label>
+                <input type="text" value="{{ employee.role.role_name }}" readonly>
+                <div class="readonly-hint">Роль нельзя изменить через профиль</div>
+            </div>
+        {% else %}
+            <!-- ← Остальные роли видят, но не могут редактировать -->
+            <div class="row">
+                <div class="form-group">
+                    <label>Должность</label>
+                    <input type="text" value="{{ employee.position.name|default:"Не указана" }}" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Отдел</label>
+                    <input type="text" value="{{ employee.department.name|default:"Не указан" }}" readonly>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Кабинет</label>
+                <input type="text" value="{% if employee.office %}{{ employee.office.number|default:"Не распределён" }} ({{ employee.office.building.name|default:"-" }}){% else %}Не указан{% endif %}" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Роль</label>
+                <input type="text" value="{{ employee.role.role_name }}" readonly>
+            </div>
+        {% endif %}
+        <button type="submit">Сохранить изменения</button>
+    </form>
+</div>
+</body>
+</html>
+</body>
+</html>

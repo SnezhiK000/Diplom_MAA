@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+<head>
+    <!--Отображение логотипа на странице-->
+    <link rel="icon" href="{% static 'icon.png' %}" type="image/png">
+    <meta charset="UTF-8">
+    <title>Затраты на оборудование</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #e8f5e9 0%, #b2dfdb 100%); color: #263238; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h1 { color: #00695c; }
+        .nav-bar { margin-bottom: 20px; display: flex; gap: 10px; }
+        .nav-link { text-decoration: none; color: white; background: #26a69a; padding: 8px 15px; border-radius: 5px; font-weight: 600; }
+        .nav-link:hover { background: #00897b; }
+        .nav-link.danger { background: #ef5350; }
+        .stats-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .card { background: white; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .card-value { font-size: 32px; font-weight: bold; color: #00695c; }
+        .card-label { color: #546e7a; font-size: 14px; }
+        .info-block { background: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #26a69a; }
+        .filters { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-size: 13px; font-weight: bold; color: #00695c; margin-bottom: 5px; }
+        .form-group input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; margin-bottom: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th { background: #80cbc4; color: #004d40; padding: 12px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #e0f2f1; }
+        tr:hover { background: #e0f7fa; }
+        .total-row { background: #e8f5e9; font-weight: bold; }
+        .messages { color: #c62828; background: #ffebee; padding: 10px; margin-bottom: 15px; border-radius: 5px; }
+        .no-data { color: #999; font-style: italic; }
+        .file-link { color: #0277bd; text-decoration: none; font-size: 12px; }
+    </style>
+</head>
+<body>
+<!--Хеддер с информацией о заведении и иконкой-->
+<div style="background: linear-gradient(135deg, #00695c 0%, #00897b 100%); padding: 15px 20px; margin-bottom: 20px; border-bottom: 3px solid #4db6ac; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+    <div style="display: flex; align-items: center; gap: 15px; max-width: 1400px; margin: 0 auto;">
+        <img src="{% static 'logo.png' %}" alt="ГБУЗ РХ АМКБ" style="width: 50px; height: 50px; object-fit: contain; border-radius: 8px; background: white; padding: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div style="color: white;">
+            <h1 style="margin: 0; font-size: 24px; font-weight: bold; letter-spacing: 1px; font-family: 'Segoe UI', sans-serif; color: white;">ГБУЗ РХ АМКБ</h1>
+            <p style="margin: 0; font-size: 12px; color: white; font-weight: normal;">Система учёта заявок</p>
+        </div>
+    </div>
+</div>
+<div class="container">
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}{{ message }}{% endfor %}
+        </div>
+    {% endif %}
+    <div class="header">
+        <h1>Затраты на оборудование</h1>
+        <p>Добро пожаловать, <strong>{{ user_name }}</strong></p>
+    </div>
+    <div class="nav-bar">
+        <button class="nav-link"><a  onclick="history.back()">Назад</a></button>
+        <a href="{% url 'show_technician' %}" class="nav-link">Все заявки</a>
+        <a href="{% url 'show_equipment' %}" class="nav-link active">Оборудование</a>
+        <a href="{% url 'logout_view' %}" class="nav-link danger">Выйти</a>
+    </div>
+
+    {% if messages %}
+        <div class="messages">{% for message in messages %}{{ message }}{% endfor %}</div>
+    {% endif %}
+
+    {% if equipment %}
+        <div class="info-block">
+            <div><strong>Оборудование:</strong> {{ equipment.model.name }} (Инв. № {{ equipment.inventory_number }})</div>
+            <div><strong>Тип:</strong> {{ equipment.type.name }} | <strong>Кабинет:</strong> {{ equipment.assigned_office.number }}</div>
+        </div>
+    {% endif %}
+
+    <div class="stats-cards">
+        <div class="card">
+            <div class="card-value">{{ requests.count }}</div>
+            <div class="card-label">Всего заявок</div>
+        </div>
+        <div class="card">
+            <div class="card-value">{{ total_cost|default:"0" }} ₽</div>
+            <div class="card-label">Общая стоимость</div>
+        </div>
+        <div class="card">
+            <div class="card-value">{{ avg_cost|default:"0" }} ₽</div>
+            <div class="card-label">Средняя стоимость</div>
+        </div>
+    </div>
+
+    <form method="GET" class="filters">
+        {% if equipment %}
+            <input type="hidden" name="equipment_id" value="{{ equipment.inventory_number }}">
+        {% endif %}
+        <div class="form-group">
+            <label>Дата с:</label>
+            <input type="date" name="date_from" value="{{ date_from }}">
+        </div>
+        <div class="form-group">
+            <label>Дата по:</label>
+            <input type="date" name="date_to" value="{{ date_to }}">
+        </div>
+        <button type="submit" class="nav-link" style="border:none; cursor:pointer;">Фильтровать</button>
+        <a href="{% url 'equipment_costs' %}{% if equipment %}?equipment_id={{ equipment.inventory_number }}{% endif %}" class="nav-link danger" style="border:none; cursor:pointer;">Сброс</a>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>№ заявки</th>
+                <th>Дата</th>
+                <th>Заказчик</th>
+                <th>Описание</th>
+                <th>Запчасти</th>
+                <th>Услуги</th>
+                <th>Стоимость</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for req in requests %}
+            <tr>
+                <td>{{ req.act_number }}</td>
+                <td>{{ req.registration_date|date:"d.m.Y" }}</td>
+                <td>{{ req.requester.last_name }} {{ req.requester.first_name }}</td>
+                <td>{{ req.problem_description|truncatewords:5 }}</td>
+                <td>
+                    <!-- Запчасти через промежуточную модель -->
+                    {% for item in req.used_spare_parts.all %}
+                        <div>{{ item.spare_part.name }} x{{ item.quantity }} = {{ item.total_cost }} ₽</div>
+                    {% empty %}
+                        <span style="color:#999;">Нет</span>
+                    {% endfor %}
+                </td>
+                <td>
+                    {% for item in req.used_services.all %}
+                        <div>{{ item.service.name }} x{{ item.quantity }} = {{ item.total_cost }} ₽</div>
+                    {% empty %}
+                        <span style="color:#999;">Нет</span>
+                    {% endfor %}
+                </td>
+                <td><strong>{{ req.total_cost }}₽</strong></td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" style="text-align:center; padding:20px;">Заявок не найдено</td>
+            </tr>
+            {% endfor %}
+
+            {% if requests %}
+            <tr style="background:#e8f5e9; font-weight:bold;">
+                <td colspan="6" style="text-align:right;">ИТОГО:</td>
+                <td>{{ total_cost }} ₽</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
