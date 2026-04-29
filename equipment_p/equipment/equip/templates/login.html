@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+<head>
+    <!--Отображение логотипа на странице-->
+    <link rel="icon" href="{% static 'icon.png' %}" type="image/png">
+    <meta charset="UTF-8">
+    <title>Вход в систему - ГБУЗ РХ АМКБ</title>
+    <style>
+        body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#e8f5e9 0%,#b2dfdb 100%);color:#263238;padding:20px;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;}
+        .container{background:white;padding:40px;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.1);max-width:400px;width:100%;}
+        h1{color:#00695c;text-align:center;margin-bottom:10px;}
+        .subtitle{text-align:center;color:#546e7a;margin-bottom:30px;}
+        .form-group{margin-bottom:20px;}
+        label{display:block;font-weight:bold;margin-bottom:5px;color:#004d40;}
+        input{width:100%;padding:12px;border:1px solid #ccc;border-radius:5px;box-sizing:border-box;font-size:14px;}
+        input:focus{outline:none;border-color:#26a69a;box-shadow:0 0 5px rgba(38,166,154,0.3);}
+        button{width:100%;padding:14px;background:#26a69a;color:white;border:none;border-radius:5px;font-size:16px;font-weight:bold;cursor:pointer;margin-top:10px;}
+        button:hover{background:#00897b;}
+        .messages{color:#c62828;background:#ffebee;padding:15px;margin-bottom:20px;border-radius:5px;border-left:4px solid #e53935;}
+        .register-link{text-align:center;margin-top:20px;color:#546e7a;}
+        .register-link a{color:#26a69a;text-decoration:none;font-weight:bold;}
+        .register-link a:hover{text-decoration:underline;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Вход</h1>
+        <p class="subtitle">Войдите в свою учётную запись</p>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="messages">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Логин (email)</label>
+                <input type="text" name="username" required placeholder="example@mail.ru">
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" name="password" required placeholder="••••••••">
+            </div>
+            <button type="submit">Войти</button>
+        </form>
+        <div class="register-link">
+            Нет аккаунта? <a href="{% url 'registration_view' %}">Зарегистрироваться</a>
+        </div>
+    </div>
+</body>
+</html>

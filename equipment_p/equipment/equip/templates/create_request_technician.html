@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+<head>
+    <!--Отображение логотипа на странице-->
+    <link rel="icon" href="{% static 'icon.png' %}" type="image/png">
+    <meta charset="UTF-8">
+    <title>Создание заявки</title>
+    <style>
+        body { font-family: sans-serif; background: linear-gradient(135deg, #e8f5e9 0%, #b2dfdb 100%); color: #263238; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .nav-bar { margin-bottom: 20px; display: flex; gap: 10px; }
+        .nav-link { text-decoration: none; color: white; background: #26a69a; padding: 8px 12px; border-radius: 4px; font-weight: 600; }
+        .nav-link:hover { background: #00897b; }
+        .nav-link.danger { background: #ef5350; }
+        .section { margin-bottom: 20px; padding: 15px; border: 1px solid #b2dfdb; border-radius: 4px; }
+        .section h3 { margin-top: 0; color: #00695c; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #004d40; }
+        select, textarea, input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        textarea { height: 80px; resize: vertical; }
+        button { background: #26a69a; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; }
+        button:hover { background: #00897b; }
+        .messages { color: #c62828; background: #ffebee; padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+        .cancel-link { display: block; text-align: center; margin-top: 10px; color: #c62828; text-decoration: none; font-weight: 600; }
+    </style>
+</head>
+<body>
+<!--Хеддер с информацией о заведении и иконкой-->
+<div style="background: linear-gradient(135deg, #00695c 0%, #00897b 100%); padding: 15px 20px; margin-bottom: 20px; border-bottom: 3px solid #4db6ac; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+    <div style="display: flex; align-items: center; gap: 15px; max-width: 1400px; margin: 0 auto;">
+        <img src="{% static 'logo.png' %}" alt="ГБУЗ РХ АМКБ" style="width: 50px; height: 50px; object-fit: contain; border-radius: 8px; background: white; padding: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div style="color: white;">
+            <h1 style="margin: 0; font-size: 24px; font-weight: bold; letter-spacing: 1px; font-family: 'Segoe UI', sans-serif; color: white;">ГБУЗ РХ АМКБ</h1>
+            <p style="margin: 0; font-size: 12px; color: white; font-weight: normal;">Система учёта заявок</p>
+        </div>
+    </div>
+</div>
+<div class="container">
+    <div class="nav-bar">
+        <a href="{% url 'show_technician' %}" class="nav-link">Все заявки</a>
+        <a href="{% url 'show_new_requests' %}" class="nav-link">Новые</a>
+        <a href="{% url 'logout_view' %}" class="nav-link danger">Выйти</a>
+    </div>
+    <h2>Создание новой заявки</h2>
+    <p>Добро пожаловать, <strong>{{ user_name }}</strong></p>
+    {% if messages %}
+        <div class="messages">{% for message in messages %}{{ message }}{% endfor %}</div>
+    {% endif %}
+    <form method="POST">
+        {% csrf_token %}
+        <div class="section">
+            <h3>Заказчик</h3>
+            <div class="form-group">
+                <label>Сотрудник *: </label>
+                <select name="requester" required>
+                    <option value="">-- Выберите сотрудника --</option>
+                    {% for cust in customers %}
+                        <option value="{{ cust.id }}">{{ cust.last_name }} {{ cust.first_name }} {{ cust.middle_name }} (Кабинет {{ cust.office.number }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="section">
+            <h3>Оборудование и проблема</h3>
+            <div class="form-group">
+                <label>Оборудование *: </label>
+                <select name="equipment" required>
+                    <option value="">-- Выберите оборудование --</option>
+                    {% for equip in equipment_list %}
+                        <option value="{{ equip.inventory_number }}">{{ equip.inventory_number }} - {{ equip.model.name }} ({{ equip.configuration }}) | Каб. {{ equip.assigned_office.number }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Описание проблемы *: </label>
+                <textarea name="problem_description" required></textarea>
+            </div>
+        </div>
+        <div class="section">
+            <h3>Исполнение</h3>
+            <div class="form-group">
+                <label>Исполнитель: </label>
+                <select name="assigned_technician">
+                    <option value="">-- Не назначен --</option>
+                    {% for tech in technicians %}
+                        <option value="{{ tech.id }}">{{ tech.last_name }} {{ tech.first_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Статус: </label>
+                <select name="status">
+                    {% for status in statuses %}
+                        <option value="{{ status.id }}">{{ status.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="section">
+            <h3>Детали</h3>
+            <div class="form-group">
+                <label>Категория: </label>
+                <select name="category">
+                    <option value="">-- Нет --</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.id }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Приоритет: </label>
+                <select name="priority">
+                    <option value="">-- Нет --</option>
+                    {% for pri in priorities %}
+                        <option value="{{ pri.id }}">{{ pri.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Этап ремонта: </label>
+                <select name="repair_stage">
+                    <option value="">-- Нет --</option>
+                    {% for stage in stages %}
+                        <option value="{{ stage.id }}">{{ stage.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Дата выполнения:</label>
+                <input type="date" name="completion_date" value="{{ now|date:'Y-m-d' }}" min="{{ now|date:'Y-m-d' }}">
+            </div>
+        </div>
+        <button type="submit">Создать заявку</button>
+        <a href="{% url 'show_technician' %}" class="cancel-link">Отмена</a>
+    </form>
+</div>
+</body>
+</html>
