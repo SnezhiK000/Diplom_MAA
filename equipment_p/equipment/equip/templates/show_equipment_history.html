@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+<head>
+    <!--Отображение логотипа на странице-->
+    <link rel="icon" href="{% static 'icon.png' %}" type="image/png">
+    <meta charset="UTF-8">
+    <title>История ремонтов - Оборудование №{{ equipment.inventory_number }}</title>
+    <style>
+        body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#e8f5e9 0%,#b2dfdb 100%);color:#263238;padding:20px;margin:0;}
+        .container{max-width:1400px;margin:0 auto;}
+        .header{background:white;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+        h1{color:#00695c;margin-top:0;}
+        .nav-bar{margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap;}
+        .nav-link{text-decoration:none;color:white;background:#26a69a;padding:8px 15px;border-radius:5px;font-weight:600;}
+        .nav-link:hover{background:#00897b;}
+        .nav-link.danger{background:#ef5350;}
+        .messages{color:#c62828;background:#ffebee;padding:10px;margin-bottom:15px;border-radius:5px;}
+        /* Карточка оборудования */
+        .equipment-card{background:white;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);border-left:4px solid #00695c;}
+        .equipment-info{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;}
+        .info-item{padding:10px;background:#e8f5e9;border-radius:5px;}
+        .info-label{font-size:12px;color:#546e7a;margin-bottom:5px;}
+        .info-value{font-weight:bold;color:#00695c;}
+        /* Статистика */
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin-bottom:20px;}
+        .stat-card{background:white;padding:15px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.1);text-align:center;}
+        .stat-value{font-size:28px;font-weight:bold;color:#00695c;}
+        .stat-label{color:#546e7a;margin-top:5px;font-size:13px;}
+        /* Таблица истории */
+        .history-table{width:100%;border-collapse:collapse;background:white;border-radius:8px;overflow:hidden;box-shadow:0 2px 5px rgba(0,0,0,0.1);margin-bottom:20px;}
+        .history-table th{background:#80cbc4;color:#004d40;padding:12px;text-align:left;font-weight:600;}
+        .history-table td{padding:10px;border-bottom:1px solid #e0f2f1;}
+        .history-table tr:hover{background:#e0f7fa;}
+        .status-badge{padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;}
+        .status-completed{background:#c8e6c9;color:#2e7d32;}
+        .status-in-progress{background:#fff3e0;color:#ef6c00;}
+    </style>
+</head>
+<body>
+<!--Хеддер с информацией о заведении и иконкой-->
+<div style="background: linear-gradient(135deg, #00695c 0%, #00897b 100%); padding: 15px 20px; margin-bottom: 20px; border-bottom: 3px solid #4db6ac; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+    <div style="display: flex; align-items: center; gap: 15px; max-width: 1400px; margin: 0 auto;">
+        <img src="{% static 'logo.png' %}" alt="ГБУЗ РХ АМКБ" style="width: 50px; height: 50px; object-fit: contain; border-radius: 8px; background: white; padding: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div style="color: white;">
+            <h1 style="margin: 0; font-size: 24px; font-weight: bold; letter-spacing: 1px; font-family: 'Segoe UI', sans-serif; color: white;">ГБУЗ РХ АМКБ</h1>
+            <p style="margin: 0; font-size: 12px; color: white; font-weight: normal;">Система учёта заявок</p>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="header">
+        <h1>История ремонтов оборудования №{{ equipment.inventory_number }}</h1>
+        <p>Добро пожаловать, <strong>{{ user_name }}</strong></p>
+    </div>
+
+    {% if messages %}
+        <div class="messages">{% for message in messages %}{{ message }}{% endfor %}</div>
+    {% endif %}
+
+    <nav class="nav-bar">
+        <button class="nav-link"><a  onclick="history.back()">Назад</a></button>
+        <a href="{% url 'show_equipment' %}" class="nav-link">Оборудование</a>
+        {% if user_role == 'Руководитель' %}
+            <a href="{% url 'manager_dashboard' %}" class="nav-link">Панель руководителя</a>
+        {% else %}
+            <a href="{% url 'show_technician' %}" class="nav-link">Заявки техника</a>
+        {% endif %}
+        <a href="{% url 'edit_equipment' equipment.inventory_number %}" class="nav-link">Редактировать</a>
+        <a href="{% url 'logout_view' %}" class="nav-link danger">Выйти</a>
+    </nav>
+    <!--КАРТОЧКА ОБОРУДОВАНИЯ -->
+    <div class="equipment-card">
+        <h2 style="color:#00695c;margin-top:0;">Информация об оборудовании</h2>
+        <div class="equipment-info">
+            <div class="info-item">
+                <div class="info-label">Инвентарный номер</div>
+                <div class="info-value">{{ equipment.inventory_number }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Модель</div>
+                <div class="info-value">{{ equipment.model.name }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Тип</div>
+                <div class="info-value">{{ equipment.type.name }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Производитель</div>
+                <div class="info-value">{{ equipment.model.manufacturer.name|default:"Не указан" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Статус</div>
+                <div class="info-value">{{ equipment.status.name }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Кабинет</div>
+                <div class="info-value">{{ equipment.assigned_office.number|default:"Не распределён" }} ({{ equipment.assigned_office.building.name|default:"-" }})</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Гарантия</div>
+                <div class="info-value">{{ equipment.warranty.end_date|date:"d.m.Y"|default:"Нет гарантии" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Дата приобретения</div>
+                <div class="info-value">{{ equipment.purchase_date|date:"d.m.Y"|default:"Не указана" }}</div>
+            </div>
+        </div>
+    </div>
+    <!-- СТАТИСТИКА -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ breakdown_count }}</div>
+            <div class="stat-label">Всего поломок</div>
+        </div>
+        {% if can_see_costs %}
+        <div class="stat-card" style="border-left: 4px solid #ff9800;">
+            <div class="stat-value">{{ total_cost }} ₽</div>
+            <div class="stat-label">Общие затраты</div>
+        </div>
+        <div class="stat-card" style="border-left: 4px solid #4caf50;">
+            <div class="stat-value">{{ avg_cost }} ₽</div>
+            <div class="stat-label">Средняя стоимость</div>
+        </div>
+        {% else %}
+        <div class="stat-card" style="border-left: 4px solid #2196f3;">
+            <div class="stat-value">Финансы скрыты</div>
+        </div>
+        {% endif %}
+    </div>
+    <!-- ТАБЛИЦА ИСТОРИИ РЕМОНТОВ -->
+    <h2 style="color:#00695c;margin-top:30px;">История ремонтов</h2>
+
+    {% if repair_history %}
+        <table class="history-table">
+    <thead>
+        <tr>
+            <th>№ заявки</th>
+            <th>Дата</th>
+            <th>Описание</th>
+            <th>Заказчик</th>
+            <th>Исполнитель</th>
+            <th>Статус</th>
+            {% if can_see_costs %}
+            <th>Затраты</th>
+            {% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for req in repair_history %}
+        <tr>
+            <td>{{ req.act_number }}</td>
+            <td>{{ req.registration_date|date:"d.m.Y" }}</td>
+            <td>{{ req.problem_description|truncatechars:40 }}</td>
+            <td>{{ req.requester.last_name }}</td>
+            <td>{{ req.assigned_technician.last_name|default:"—" }}</td>
+            <td>
+                {% if req.completion_date %}Выполнена{% else %}В работе{% endif %}
+            </td>
+            {% if can_see_costs %}
+            <td style="font-weight: bold; color: #d32f2f;">
+                {{ req.total_cost }} ₽
+            </td>
+            {% endif %}
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="{% if can_see_costs %}7{% else %}6{% endif %}" style="text-align:center;">
+                История пуста
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+    {% else %}
+        <div class="equipment-card" style="text-align:center;padding:40px;">
+            <p style="font-size:18px;color:#546e7a;">История ремонтов отсутствует</p>
+            <p style="color:#90a4ae;">Для этого оборудования еще не было зарегистрировано заявок</p>
+        </div>
+    {% endif %}
+</div>
+</body>
+</html>

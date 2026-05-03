@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+<head>
+    <!--Отображение логотипа на странице-->
+    <link rel="icon" href="{% static 'icon.png' %}" type="image/png">
+    <meta charset="UTF-8">
+    <title>Редактирование заявки №{{ request_obj.act_number }}</title>
+    <style>
+        body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#e8f5e9 0%,#b2dfdb 100%);color:#263238;padding:20px;margin:0;}
+        .container{max-width:1000px;margin:0 auto;background:white;padding:30px;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,0.1);}
+        .nav-bar{margin-bottom:20px;display:flex;gap:10px;}
+        .nav-link{text-decoration:none;color:white;background:#26a69a;padding:8px 15px;border-radius:5px;font-weight:600;}
+        .nav-link:hover{background:#00897b;}
+        .nav-link.danger{background:#ef5350;}
+        .form-group{margin-bottom:20px;}
+        label{display:block;font-weight:bold;margin-bottom:5px;color:#004d40;}
+        select,input,textarea{width:100%;padding:10px;border:1px solid #ccc;border-radius:5px;box-sizing:border-box;font-size:14px;}
+        .row{display:flex;gap:15px;}
+        .row .form-group{flex:1;}
+        .items-container{background:#f5f5f5;padding:15px;border-radius:5px;margin-bottom:15px;}
+        .item-row{display:flex;gap:10px;align-items:center;margin-bottom:10px;padding:10px;background:white;border-radius:5px;}
+        .item-row select{flex:2;}
+        .item-row input{flex:1;}
+        .btn-add{background:#4caf50;color:white;border:none;padding:8px 15px;border-radius:5px;cursor:pointer;}
+        .btn-remove{background:#ef5350;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;}
+        button[type="submit"]{background:#26a69a;color:white;border:none;padding:12px 20px;border-radius:5px;cursor:pointer;font-size:16px;width:100%;}
+        button[type="submit"]:hover{background:#00897b;}
+        .messages{color:#c62828;background:#ffebee;padding:15px;margin-bottom:20px;border-radius:5px;border-left:4px solid #e53935;}
+        .section-title{color:#00695c;border-bottom:2px solid #80cbc4;padding-bottom:10px;margin:30px 0 20px 0;}
+    </style>
+</head>
+<body>
+<!--Хеддер с информацией о заведении и иконкой-->
+<div style="background: linear-gradient(135deg, #00695c 0%, #00897b 100%); padding: 15px 20px; margin-bottom: 20px; border-bottom: 3px solid #4db6ac; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+    <div style="display: flex; align-items: center; gap: 15px; max-width: 1400px; margin: 0 auto;">
+        <img src="{% static 'logo.png' %}" alt="ГБУЗ РХ АМКБ" style="width: 50px; height: 50px; object-fit: contain; border-radius: 8px; background: white; padding: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div style="color: white;">
+            <h1 style="margin: 0; font-size: 24px; font-weight: bold; letter-spacing: 1px; font-family: 'Segoe UI', sans-serif; color: white;">ГБУЗ РХ АМКБ</h1>
+            <p style="margin: 0; font-size: 12px; color: white; font-weight: normal;">Система учёта заявок</p>
+        </div>
+    </div>
+</div>
+<div class="container">
+    <div class="nav-bar">
+        <a href="{% url 'show_technician' %}" class="nav-link">К заявкам</a>
+        <a href="{% url 'show_new_requests' %}" class="nav-link">Новые заявки</a>
+        <a href="{% url 'logout_view' %}" class="nav-link danger">Выйти</a>
+    </div>
+
+    <h2 style="color:#00695c;">Редактирование заявки №{{ request_obj.act_number }}</h2>
+    <p>Добро пожаловать, <strong>{{ user_name }}</strong></p>
+
+    {% if messages %}
+        <div class="messages">{% for message in messages %}{{ message }}{% endfor %}</div>
+    {% endif %}
+
+    <div style="background:#e3f2fd;padding:15px;border-radius:5px;margin-bottom:20px;">
+        <p><strong>Заказчик:</strong> {{ request_obj.requester.last_name }} {{ request_obj.requester.first_name }} {{ request_obj.requester.middle_name }}</p>
+        <p><strong>Дата регистрации:</strong> {{ request_obj.registration_date|date:"d.m.Y H:i" }}</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <h3 class="section-title">Основная информация</h3>
+
+        <div class="form-group">
+            <label>Описание проблемы *:</label>
+            <textarea name="problem_description" rows="3" required>{{ request_obj.problem_description }}</textarea>
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label>Оборудование *:</label>
+                <select name="equipment" required>
+                    {% for equip in equipment_list %}
+                        <option value="{{ equip.inventory_number }}" {% if request_obj.equipment.inventory_number == equip.inventory_number %}selected{% endif %}>
+                            {{ equip.inventory_number }} - {{ equip.model.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Исполнитель:</label>
+                <select name="assigned_technician">
+                    <option value="">-- Не назначен --</option>
+                    {% for tech in technicians %}
+                        <option value="{{ tech.id }}" {% if request_obj.assigned_technician.id == tech.id %}selected{% endif %}>
+                            {{ tech.last_name }} {{ tech.first_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label>Статус оборудования:</label>
+                <select name="status">
+                    {% for status in statuses %}
+                        <option value="{{ status.id }}" {% if request_obj.equipment.status.id == status.id %}selected{% endif %}>
+                            {{ status.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Дата выполнения:</label>
+                <input type="date" name="completion_date" value="{{ request_obj.completion_date|date:'Y-m-d' }}">
+            </div>
+        </div>
+
+        <h3 class="section-title">Детали заявки</h3>
+
+        <div class="row">
+            <div class="form-group">
+                <label>Категория:</label>
+                <select name="category">
+                    <option value="">-- Нет --</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.id }}" {% if request_obj.category.id == cat.id %}selected{% endif %}>
+                            {{ cat.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Приоритет:</label>
+                <select name="priority">
+                    <option value="">-- Нет --</option>
+                    {% for pri in priorities %}
+                        <option value="{{ pri.id }}" {% if request_obj.priority.id == pri.id %}selected{% endif %}>
+                            {{ pri.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Этап ремонта:</label>
+                <select name="repair_stage">
+                    <option value="">-- Нет --</option>
+                    {% for stage in stages %}
+                        <option value="{{ stage.id }}" {% if request_obj.repair_stage.id == stage.id %}selected{% endif %}>
+                            {{ stage.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <h3 class="section-title">Запчасти</h3>
+        <div class="items-container" id="spare-parts-container">
+            {% for item in request_obj.used_spare_parts.all %}
+            <div class="item-row">
+                <select name="spare_part_id[]">
+                    {% for part in spare_parts_list %}
+                        <option value="{{ part.id }}" {% if item.spare_part.id == part.id %}selected{% endif %}>
+                            {{ part.name }} ({{ part.cost }} ₽)
+                        </option>
+                    {% endfor %}
+                </select>
+                <input type="number" name="spare_part_price[]" value="{{ item.cost_at_repair }}" step="0.01" placeholder="Цена">
+                <input type="number" name="spare_part_quantity[]" value="{{ item.quantity }}" placeholder="Кол-во">
+                <button type="button" class="btn-remove" onclick="this.parentElement.remove()">✕</button>
+            </div>
+            {% endfor %}
+        </div>
+        <button type="button" class="btn-add" onclick="addSparePart()">+ Добавить запчасть</button>
+
+        <h3 class="section-title">Услуги</h3>
+        <div class="items-container" id="services-container">
+            {% for item in request_obj.used_services.all %}
+            <div class="item-row">
+                <select name="service_id[]">
+                    {% for service in services_list %}
+                        <option value="{{ service.id }}" {% if item.service.id == service.id %}selected{% endif %}>
+                            {{ service.name }} ({{ service.cost }} ₽)
+                        </option>
+                    {% endfor %}
+                </select>
+                <input type="number" name="service_price[]" value="{{ item.cost_at_repair }}" step="0.01" placeholder="Цена">
+                <input type="number" name="service_quantity[]" value="{{ item.quantity }}" placeholder="Кол-во">
+                <input type="file" name="service_file[]" accept=".pdf,.jpg,.png,.doc,.docx">
+                <button type="button" class="btn-remove" onclick="this.parentElement.remove()">✕</button>
+            </div>
+            {% endfor %}
+        </div>
+        <button type="button" class="btn-add" onclick="addService()">+ Добавить услугу</button>
+
+        <div style="margin-top:30px;">
+            <button type="submit">Сохранить изменения</button>
+        </div>
+    </form>
+
+    <div style="margin-top:20px;text-align:center;">
+        <a href="{% url 'show_technician' %}" style="color:#546e7a;text-decoration:none;">Отмена</a>
+    </div>
+</div>
+
+<script>
+    //Скрипт для подсчета запчастей и услуг если они вписываются вручную
+function addSparePart() {
+    const container = document.getElementById('spare-parts-container');
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.innerHTML = `
+        <select name="spare_part_id[]">
+            {% for part in spare_parts_list %}
+                <option value="{{ part.id }}">{{ part.name }} ({{ part.cost }} ₽)</option>
+            {% endfor %}
+        </select>
+        <input type="number" name="spare_part_price[]" step="0.01" placeholder="Цена">
+        <input type="number" name="spare_part_quantity[]" value="1" placeholder="Кол-во">
+        <button type="button" class="btn-remove" onclick="this.parentElement.remove()">✕</button>
+    `;
+    container.appendChild(row);
+}
+function addService() {
+    const container = document.getElementById('services-container');
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.innerHTML = `
+        <select name="service_id[]">
+            {% for service in services_list %}
+                <option value="{{ service.id }}">{{ service.name }} ({{ service.cost }} ₽)</option>
+            {% endfor %}
+        </select>
+        <input type="number" name="service_price[]" step="0.01" placeholder="Цена">
+        <input type="number" name="service_quantity[]" value="1" placeholder="Кол-во">
+        <input type="file" name="service_file[]" accept=".pdf,.jpg,.png,.doc,.docx">
+        <button type="button" class="btn-remove" onclick="this.parentElement.remove()">✕</button>
+    `;
+    container.appendChild(row);
+}
+</script>
+</body>
+</html>
