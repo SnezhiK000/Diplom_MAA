@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+<head>
+    <!--Отображение логотипа на странице-->
+    <link rel="icon" href="{% static 'icon.png' %}" type="image/png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сотрудники - Администратор</title>
+    <style>
+        body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#e8f5e9 0%,#b2dfdb 100%);color:#263238;padding:20px;margin:0;}
+        .container{max-width:1400px;margin:0 auto;}
+        .header{background:white;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+        h1{color:#00695c;margin-top:0;}
+        .nav-bar{margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap;}
+        .nav-link{text-decoration:none;color:white;background:#26a69a;padding:8px 15px;border-radius:5px;font-weight:600;}
+        .nav-link:hover{background:#00897b;}
+        .nav-link.active{background:#00695c;}
+        .nav-link.danger{background:#ef5350;}
+        .filters{background:white;padding:15px;border-radius:8px;margin-bottom:20px;display:flex;gap:15px;flex-wrap:wrap;align-items:flex-end;}
+        .form-group{display:flex;flex-direction:column;}
+        .form-group label{font-size:13px;font-weight:bold;color:#00695c;margin-bottom:5px;}
+        .form-group input,.form-group select{padding:8px;border:1px solid #ccc;border-radius:4px;min-width:200px;}
+        table{width:100%;border-collapse:collapse;background:white;border-radius:8px;overflow:hidden;box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+        th{background:#80cbc4;color:#004d40;padding:12px;text-align:left;}
+        td{padding:10px;border-bottom:1px solid #e0f2f1;}
+        tr:hover{background:#e0f7fa;}
+        .messages{color:#c62828;background:#ffebee;padding:10px;margin-bottom:15px;border-radius:5px;}
+        .btn-sm{padding:4px 8px;font-size:12px;text-decoration:none;border-radius:4px;color:white;background:#26a69a;border:none;cursor:pointer;margin-right:5px;}
+        .btn-sm:hover{background:#f57c00;}
+        .btn-danger{background:#ef5350;}
+        .btn-danger:hover{background:#e53935;}
+        .btn-danger-sm { background: #26a69a; }
+        .btn-success{background:#4caf50;}
+        .btn-success:hover{background:#388e3c;}
+        .role-badge{padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;}
+        .role-admin{background:#F5C2C2;color:#c62828;}
+        .role-manager{background:#f3e5f5;color:#6a1b9a;}
+        .role-technician{background:#fff3e0;color:#e65100;}
+        .role-employee{background:#e8f5e9;color:#2e7d32;}
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px;}
+        .stat-card{background:white;padding:15px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.1);text-align:center;}
+        .stat-value{font-size:28px;font-weight:bold;color:#00695c;}
+        .stat-label{color:#546e7a;margin-top:5px;font-size:13px;}
+    </style>
+</head>
+<body>
+<!--Хеддер с информацией о заведении и иконкой-->
+<div style="background: linear-gradient(135deg, #00695c 0%, #00897b 100%); padding: 15px 20px; margin-bottom: 20px; border-bottom: 3px solid #4db6ac; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+    <div style="display: flex; align-items: center; gap: 15px; max-width: 1400px; margin: 0 auto;">
+        <img src="{% static 'logo.png' %}" alt="ГБУЗ РХ АМКБ" style="width: 50px; height: 50px; object-fit: contain; border-radius: 8px; background: white; padding: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div style="color: white;">
+            <h1 style="margin: 0; font-size: 24px; font-weight: bold; letter-spacing: 1px; font-family: 'Segoe UI', sans-serif; color: white;">ГБУЗ РХ АМКБ</h1>
+            <p style="margin: 0; font-size: 12px; color: white; font-weight: normal;">Система учёта заявок</p>
+        </div>
+    </div>
+</div>
+<div class="container">
+    <div class="header">
+        <h1>Администрирование, редактирование сотрудников </h1>
+        <p>Добро пожаловать, <strong>{{ user_name }}</strong> (Администратор)</p>
+    </div>
+
+    {% if messages %}
+        <div class="messages">{% for message in messages %}{{ message }}{% endfor %}</div>
+    {% endif %}
+
+    <nav class="nav-bar">
+        <button class="nav-link"><a  onclick="history.back()">Назад</a></button>
+        <a href="{% url 'show_my_profile' %}" class="nav-link">Профиль</a>
+        <a href="{% url 'show_admin' %}" class="nav-link active">Сотрудники</a>
+        <a href="{% url 'create_employee_admin' %}" class="nav-link">Добавить сотрудника</a>
+        <a href="{% url 'show_deleted_employees' %}" class="nav-link" style="background:#78909c;">Удалённые</a>
+        <a href="{% url 'show_equipment' %}" class="nav-link">Оборудование</a>
+        <a href="{% url 'equipment_costs' %}" class="nav-link">Затраты</a>
+    </nav>
+    <nav class="nav-bar">
+        <a href="{% url 'show_customer' %}" class="nav-link">Страница сотрудника</a>
+        <a href="{% url 'show_technician' %}" class="nav-link">Страница техника</a>
+        <a href="{% url 'manager_dashboard' %}" class="nav-link">Панель руководителя</a>
+        <a href="{% url 'logout_view' %}" class="nav-link danger">Выйти</a>
+    </nav>
+
+    <!--СТАТИСТИКА-->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_employees }}</div>
+            <div class="stat-label">Всего сотрудников</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ total_requests }}</div>
+            <div class="stat-label">Всего заявок</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ total_equipment }}</div>
+            <div class="stat-label">Всего оборудования</div>
+        </div>
+    </div>
+
+    <!-- ФИЛЬТРЫ С ПОИСКОМ -->
+    <form method="GET" class="filters" id="filterForm">
+        <div class="form-group" style="flex:2;">
+            <label>Поиск:</label>
+            <input type="text" name="search" value="{{ search_query }}" placeholder="ФИО или логин" id="searchInput" autocomplete="off">
+        </div>
+        <div class="form-group">
+            <label>Роль:</label>
+            <select name="role" id="roleSelect">
+                <option value="">Все роли</option>
+                {% for role in roles %}
+                    <option value="{{ role.id }}" {% if role_filter == role.id %}selected{% endif %}>
+                        {{ role.role_name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>&nbsp;</label>
+            <button type="submit" class="nav-link" style="border:none;cursor:pointer;">Применить</button>
+        </div>
+        <div class="form-group">
+            <label>&nbsp;</label>
+            <a href="{% url 'show_admin' %}" class="nav-link danger" style="border:none;cursor:pointer;">Сброс</a>
+        </div>
+    </form>
+
+    <!-- Таблица сотрудников -->
+    <table id="employeesTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>ФИО</th>
+                <th>Логин</th>
+                <th>Телефон</th>
+                <th>Должность</th>
+                <th>Отдел</th>
+                <th>Кабинет</th>
+                <th>Роль</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for emp in employees %}
+            <tr>
+                <td>{{ emp.id }}</td>
+                <td><strong>{{ emp.last_name }} {{ emp.first_name }} {{ emp.middle_name }}</strong></td>
+                <td>{{ emp.login }}</td>
+                <td>{{ emp.get_formatted_phone|default:"—" }}</td>
+                <td>{{ emp.position.name|default:"—" }}</td>
+                <td>{{ emp.department.name|default:"—" }}</td>
+                <td>
+                    {% if emp.office %}
+                        {{ emp.office.number|default:"—" }}
+                        {% if emp.office.building %}({{ emp.office.building.name }}){% endif %}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td>
+                    {% if emp.role.role_name == 'Администратор' %}
+                        <span style="background:#F5C2C2;color:#c62828;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">Администратор</span>
+                    {% elif emp.role.role_name == 'Руководитель' %}
+                        <span style="background:#f3e5f5;color:#6a1b9a;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">Руководитель</span>
+                    {% elif emp.role.role_name == 'Техник' %}
+                        <span style="background:#fff3e0;color:#e65100;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">Техник</span>
+                    {% else %}
+                        <span style="background:#e8f5e9;color:#2e7d32;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold;">Сотрудник</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'edit_employee_admin' emp.id %}" class="btn-sm">Изменить</a>
+                    {% if emp.id != user_id %}
+                    <form method="POST" action="{% url 'delete_employee_admin' emp.id %}" style="display:inline;" onsubmit="return confirm('Удалить сотрудника?')">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-sm btn-danger">Удалить</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9" style="text-align:center;padding:20px;color:#90a4ae;font-style:italic;">
+                    Сотрудники не найдены
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    //Поиск, фильтрация в реальном времени
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('filterForm');
+    const searchInput = document.getElementById('searchInput');
+    const roleSelect = document.getElementById('roleSelect');
+    const table = document.getElementById('employeesTable');
+    // Задержка перед отправкой) - 500мс
+    let debounceTimer;
+    // Функция авто-отправки формы
+    function autoSubmit() {
+        clearTimeout(debounceTimer);
+        table.classList.add('search-loading');
+        debounceTimer = setTimeout(function() {
+            form.submit();
+        }, 500);
+    }
+    //Отслеживание ввода в поле поиска
+    searchInput.addEventListener('input', function() {
+        autoSubmit();
+    });
+    // Отслеживание изменение фильтра роли
+    roleSelect.addEventListener('change', function() {
+        autoSubmit();
+    });
+    //Убран индикатор загрузки при загрузке страницы
+    window.addEventListener('load', function() {
+        table.classList.remove('search-loading');
+    });
+});
+</script>
+</body>
+</html>
